@@ -1,0 +1,91 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "role", "createdAt"]
+    },
+    "Case": {
+      "title": "Case",
+      "description": "A veterinary diagnostic case",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "animalType": { "type": "string" },
+        "symptoms": { "type": "string" },
+        "predictedDiseases": { "type": "array" },
+        "severity": { "type": "string" },
+        "language": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "animalType", "symptoms", "createdAt"]
+    },
+    "VetLocation": {
+      "title": "Vet Location",
+      "description": "Nearby veterinary hospital location",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "contact": { "type": "string" },
+        "address": { "type": "string" }
+      },
+      "required": ["name", "latitude", "longitude"]
+    },
+    "Vaccine": {
+      "title": "Vaccine",
+      "description": "Vaccine reminder",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "animalName": { "type": "string" },
+        "vaccineType": { "type": "string" },
+        "dueDate": { "type": "string", "format": "date-time" },
+        "administered": { "type": "boolean" }
+      },
+      "required": ["userId", "animalName", "vaccineType", "dueDate"]
+    },
+    "DietPlan": {
+      "title": "Diet Plan",
+      "description": "Animal diet plan",
+      "type": "object",
+      "properties": {
+        "animalType": { "type": "string" },
+        "planName": { "type": "string" },
+        "description": { "type": "string" },
+        "nutritionalInfo": { "type": "string" }
+      },
+      "required": ["animalType", "planName"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Public user profiles"
+    },
+    "/cases/{caseId}": {
+      "schema": "Case",
+      "description": "Diagnosed veterinary cases"
+    },
+    "/vet_locations/{vetId}": {
+      "schema": "VetLocation",
+      "description": "Veterinary clinical locations"
+    },
+    "/vaccines/{vaccineId}": {
+      "schema": "Vaccine",
+      "description": "Vaccine reminders for animals"
+    },
+    "/diet_plans/{planId}": {
+      "schema": "DietPlan",
+      "description": "Recommended diet plans"
+    }
+  }
+}

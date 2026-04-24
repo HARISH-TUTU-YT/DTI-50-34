@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3 Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Validation Helpers
+    function isValidUser(data) {
+      return data.keys().hasAll(['name', 'email', 'role', 'createdAt']) &&
+             data.keys().size() == 4 &&
+             data.name is string && data.name.size() <= 100 &&
+             data.email is string && data.email.size() <= 100 &&
+             data.role in ['user', 'admin'] &&
+             data.role == 'user' && // Force standard 'user' role on creation
+             data.createdAt == request.time;
+    }
+
+    function isValidCase(data) {
+      return data.keys().hasAll(['userId', 'animalType', 'symptoms', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.animalType is string && data.animalType.size() <= 50 &&
+             data.symptoms is string && data.symptoms.size() <= 5000 &&
+             data.createdAt == request.time;
+    }
+
+    function isValidVetLocation(data) {
+      return data.keys().hasAll(['name', 'latitude', 'longitude']) &&
+             data.name is string && data.name.size() <= 200 &&
+             data.latitude is number &&
+             data.longitude is number;
+    }
+
+    // 1. User Profiles
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && 
+                      incoming().diff(existing()).affectedKeys().hasOnly(['name']) &&
+                      incoming().name is string && incoming().name.size() <= 100;
+    }
+
+    // 2. Cases
+    match /cases/{caseId} {
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidCase(incoming());
+      // No standard updates for cases (immutable record) or restricted updates
+      allow update: if false; 
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    // 3. Vet Locations
+    match /vet_locations/{vetId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

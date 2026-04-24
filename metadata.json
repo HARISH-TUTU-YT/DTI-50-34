@@ -1,0 +1,6 @@
+{
+  "name": "VetVoice AI",
+  "description": "AI-powered Veterinary Voice Assistant for rural livestock care, providing symptom detection, emergency first-aid, and nearby vet location tracking.",
+  "requestFramePermissions": ["microphone", "geolocation"],
+  "majorCapabilities": ["voice_processing", "disease_prediction", "geolocation"]
+}
